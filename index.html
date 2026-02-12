@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TODO Gadget Matcher — Blue Collection</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--todo-black:#000;--todo-red:#E30613;--todo-red-dark:#B80510;--todo-white:#FFF;--g50:#FAFAFA;--g100:#F5F5F5;--g200:#EEE;--g300:#E0E0E0;--g400:#BDBDBD;--g500:#9E9E9E;--g600:#757575;--g700:#616161;--g800:#424242;--g900:#212121;--mx:#16A34A;--mg:#65A30D;--mf:#D97706;--ml:#DC2626;--ff:'Montserrat',sans-serif;--tr:200ms cubic-bezier(.4,0,.2,1)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+body{font-family:var(--ff);background:var(--g50);color:var(--g900);line-height:1.6;min-height:100vh;display:flex;flex-direction:column}
+a{color:var(--todo-red);text-decoration:none;transition:color var(--tr)}a:hover{color:var(--todo-red-dark)}
+
+/* HEADER */
+.header{background:var(--todo-black);color:var(--todo-white);height:72px;position:sticky;top:0;z-index:100;border-bottom:3px solid var(--todo-red)}
+.header__inner{max-width:1200px;margin:0 auto;padding:0 24px;height:100%;display:flex;align-items:center;gap:20px}
+.header__logo-link{display:flex;align-items:center;text-decoration:none;color:#fff;flex-shrink:0}
+.header__logo-img{height:36px;width:auto;display:block}
+.header__logo-fallback{display:flex;flex-direction:column;line-height:1.1}
+.logo-todo{font-size:1.5rem;font-weight:900;letter-spacing:3px}
+.logo-tagline{font-size:.55rem;font-weight:400;letter-spacing:1px;text-transform:uppercase;color:var(--g400)}
+.header__title{flex:1;min-width:0}
+.header__title h1{font-size:1.125rem;font-weight:700;letter-spacing:-.01em;line-height:1.2}
+.header__subtitle{font-size:.7rem;font-weight:400;color:var(--g400);text-transform:uppercase;letter-spacing:1px}
+.header__badge{display:flex;gap:8px;flex-shrink:0}
+.badge{font-size:.65rem;font-weight:600;padding:4px 10px;border-radius:100px;text-transform:uppercase;letter-spacing:.5px}
+.badge--api{background:var(--todo-red);color:#fff}
+.badge--bc{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2)}
+
+/* MAIN */
+.main{flex:1;padding-bottom:40px}
+.search-section{padding:32px 0 0}
+.inner{max-width:1200px;margin:0 auto;padding:0 24px}
+.search-card{background:#fff;border-radius:16px;box-shadow:0 4px 6px rgba(0,0,0,.07);overflow:hidden;border:1px solid var(--g200)}
+.search-card__header{display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:1px solid var(--g200);background:var(--g50)}
+.search-card__icon{color:var(--todo-red);display:flex;align-items:center}
+.search-card__title{font-size:1rem;font-weight:600}
+.search-card__body{padding:24px}
+.search-textarea{width:100%;font-family:var(--ff);font-size:.875rem;line-height:1.7;color:var(--g900);background:var(--g50);border:2px solid var(--g200);border-radius:10px;padding:16px 20px;resize:vertical;transition:border-color var(--tr),box-shadow var(--tr);min-height:180px}
+.search-textarea::placeholder{color:var(--g400);font-size:.8rem}
+.search-textarea:focus{outline:none;border-color:var(--todo-red);box-shadow:0 0 0 3px rgba(227,6,19,.12);background:#fff}
+.search-actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+
+/* BUTTONS */
+.btn{font-family:var(--ff);font-size:.8125rem;font-weight:600;padding:10px 20px;border:2px solid transparent;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all var(--tr);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.btn--primary{background:var(--todo-red);color:#fff;border-color:var(--todo-red)}
+.btn--primary:hover{background:var(--todo-red-dark);border-color:var(--todo-red-dark);box-shadow:0 4px 6px rgba(0,0,0,.07)}
+.btn--primary:active{transform:translateY(1px)}
+.btn--primary:disabled{background:var(--g300);border-color:var(--g300);cursor:not-allowed}
+.btn--ghost{background:transparent;color:var(--g600);border-color:transparent}
+.btn--ghost:hover{color:var(--g900);background:var(--g100)}
+.btn--outline{background:transparent;color:var(--todo-red);border-color:var(--todo-red)}
+.btn--outline:hover{background:var(--todo-red);color:#fff}
+.btn--sm{font-size:.7rem;padding:6px 12px}
+
+/* PARAMS */
+.params-section{padding:24px 0 0}
+.params-card{background:#fff;border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.06);border:1px solid var(--g200);overflow:hidden}
+.params-card__header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:var(--g50);border-bottom:1px solid var(--g200)}
+.params-card__header h3{font-size:.875rem;font-weight:600;display:flex;align-items:center;gap:8px}
+.params-card__header h3 svg{color:var(--todo-red)}
+.params-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1px;background:var(--g200)}
+.params-grid.collapsed{max-height:0;opacity:0;overflow:hidden}
+.param-item{background:#fff;padding:14px 20px}
+.param-item__label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--g500);margin-bottom:4px}
+.param-item__value{font-size:.85rem;font-weight:500;color:var(--g900);word-break:break-word}
+.param-item__value.empty{color:var(--g400);font-style:italic;font-weight:400}
+
+/* STATUS / LOADER */
+.status-bar{padding:24px 0}
+.status-bar__inner{max-width:1200px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:16px;justify-content:center;color:var(--g600);font-size:.85rem;font-weight:500}
+.loader{width:22px;height:22px;border:3px solid var(--g200);border-top-color:var(--todo-red);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* RESULTS */
+.results-section{padding:24px 0}
+.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.results-header h3{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.results-header h3 svg{color:var(--todo-red)}
+.results-meta{display:flex;align-items:center;gap:12px}
+.results-count{font-size:.75rem;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.5px}
+.sort-select{font-family:var(--ff);font-size:.75rem;font-weight:500;padding:6px 12px;border:1px solid var(--g300);border-radius:6px;background:#fff;color:var(--g700);cursor:pointer}
+.results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+
+/* PRODUCT CARD */
+.product-card{background:#fff;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,.06),0 1px 3px rgba(0,0,0,.1);border:1px solid var(--g200);overflow:hidden;transition:box-shadow var(--tr),transform var(--tr);cursor:pointer;position:relative;animation:cardIn 400ms ease both}
+.product-card:hover{box-shadow:0 10px 15px rgba(0,0,0,.1);transform:translateY(-2px)}
+@keyframes cardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.product-card__match{position:absolute;top:12px;right:12px;z-index:2}
+.match-badge{display:flex;align-items:center;gap:4px;font-size:.75rem;font-weight:700;padding:5px 10px;border-radius:100px;color:#fff}
+.match-badge--excellent{background:var(--mx)}.match-badge--good{background:var(--mg)}.match-badge--fair{background:var(--mf)}.match-badge--low{background:var(--ml)}
+.product-card__image{width:100%;height:180px;background:var(--g100);display:flex;align-items:center;justify-content:center;overflow:hidden;border-bottom:1px solid var(--g200)}
+.product-card__image img{max-width:100%;max-height:100%;object-fit:contain;padding:16px}
+.placeholder-icon{color:var(--g300)}
+.product-card__body{padding:16px 20px}
+.product-card__sku{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--todo-red);margin-bottom:4px}
+.product-card__name{font-size:.9rem;font-weight:600;color:var(--g900);margin-bottom:8px;line-height:1.3}
+.product-card__tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
+.tag{font-size:.6rem;font-weight:600;padding:3px 8px;border-radius:100px;text-transform:uppercase;letter-spacing:.3px}
+.tag--matched{background:rgba(22,163,74,.1);color:var(--mx);border:1px solid rgba(22,163,74,.2)}
+.tag--partial{background:rgba(217,119,6,.1);color:var(--mf);border:1px solid rgba(217,119,6,.2)}
+.match-bar{height:4px;background:var(--g200);border-radius:2px;overflow:hidden;margin-top:8px}
+.match-bar__fill{height:100%;border-radius:2px;transition:width 600ms cubic-bezier(.4,0,.2,1)}
+.product-card__footer{padding:10px 20px;border-top:1px solid var(--g100);display:flex;align-items:center;justify-content:space-between}
+.product-card__price{font-size:.8rem;font-weight:700;color:var(--g900)}
+.product-card__link{font-size:.7rem;font-weight:600;color:var(--todo-red);display:flex;align-items:center;gap:4px}
+
+/* NO RESULTS */
+.no-results{padding:48px 0}.no-results__inner{max-width:1200px;margin:0 auto;padding:0 24px;text-align:center;color:var(--g500)}
+.no-results__inner svg{margin-bottom:16px;opacity:.4}
+.no-results__inner h3{font-size:1.125rem;font-weight:700;color:var(--g700);margin-bottom:8px}
+.no-results__inner p{font-size:.85rem;margin-bottom:20px}
+
+/* ERROR */
+.error-bar{padding:16px 0}
+.error-bar__inner{max-width:1200px;margin:0 auto;padding:14px 24px;background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;display:flex;align-items:center;gap:12px;color:#991B1B;font-size:.85rem;font-weight:500}
+.error-bar__inner svg{flex-shrink:0;color:#DC2626}
+.error-bar__close{margin-left:auto;background:none;border:none;font-size:1.2rem;color:#991B1B;cursor:pointer;padding:0 4px}
+
+/* MODAL */
+.modal{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeIn 200ms ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal__content{background:#fff;border-radius:16px;max-width:720px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 25px rgba(0,0,0,.1);position:relative}
+.modal__close{position:absolute;top:12px;right:16px;background:none;border:none;font-size:1.5rem;color:var(--g500);cursor:pointer;z-index:1;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:all var(--tr)}
+.modal__close:hover{background:var(--g100);color:var(--g900)}
+.modal__body{padding:32px}
+.modal__product-header{display:flex;gap:24px;margin-bottom:24px}
+.modal__product-image{width:160px;height:160px;flex-shrink:0;background:var(--g100);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.modal__product-image img{max-width:100%;max-height:100%;object-fit:contain;padding:12px}
+.modal__product-info h2{font-size:1.2rem;font-weight:700;margin-bottom:6px}
+.modal__product-sku{font-size:.7rem;font-weight:600;color:var(--todo-red);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+.modal__match-details{background:var(--g50);border-radius:10px;padding:20px;margin-bottom:24px}
+.modal__match-details h4{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--g600);margin-bottom:12px}
+.comparison-row{display:grid;grid-template-columns:110px 1fr 1fr 50px;gap:8px;align-items:center;font-size:.8rem;padding:8px 0;border-bottom:1px solid var(--g200)}
+.comparison-row:last-child{border-bottom:none}
+.comparison-row__label{font-weight:600;color:var(--g600);font-size:.7rem;text-transform:uppercase;letter-spacing:.3px}
+.comparison-row__spec{color:var(--g700)}
+.comparison-row__product{color:var(--g900);font-weight:500}
+.comparison-row__status{text-align:center;font-size:.85rem}
+.modal__product-attrs{margin-top:24px}
+.modal__product-attrs h4{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--g600);margin-bottom:12px}
+.attrs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.attr-item{padding:10px 14px;background:var(--g50);border-radius:6px}
+.attr-item__label{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--g500)}
+.attr-item__value{font-size:.8rem;font-weight:500;margin-top:2px}
+
+/* FOOTER */
+.footer{background:var(--todo-black);color:var(--g500);padding:16px 0;margin-top:auto;border-top:2px solid var(--todo-red)}
+.footer__inner{max-width:1200px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:.7rem;font-weight:500}
+.footer__sep{color:var(--g700);margin:0 6px}
+.footer a{color:var(--g400)}.footer a:hover{color:var(--todo-red)}
+
+/* ANIMATION DELAYS */
+.results-grid .product-card:nth-child(1){animation-delay:0ms}
+.results-grid .product-card:nth-child(2){animation-delay:60ms}
+.results-grid .product-card:nth-child(3){animation-delay:120ms}
+.results-grid .product-card:nth-child(4){animation-delay:180ms}
+.results-grid .product-card:nth-child(5){animation-delay:240ms}
+.results-grid .product-card:nth-child(6){animation-delay:300ms}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+.header__badge{display:none}.header__title h1{font-size:.95rem}
+.inner{padding:0 16px}.search-card__body{padding:16px}
+.search-textarea{font-size:.8rem;padding:12px 16px}
+.search-actions{flex-direction:column}.search-actions .btn{width:100%;justify-content:center}
+.results-grid{grid-template-columns:1fr}.params-grid{grid-template-columns:1fr 1fr}
+.modal__product-header{flex-direction:column;align-items:center;text-align:center}
+.modal__product-image{width:140px;height:140px}
+.comparison-row{grid-template-columns:1fr;gap:4px;padding:10px 0}
+.footer__inner{flex-direction:column;gap:8px;text-align:center}
+}
+@media(max-width:480px){.params-grid{grid-template-columns:1fr}.modal__body{padding:24px 16px}.attrs-grid{grid-template-columns:1fr}}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:var(--g100)}::-webkit-scrollbar-thumb{background:var(--g300);border-radius:4px}::-webkit-scrollbar-thumb:hover{background:var(--g400)}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+<div class="header__inner">
+    <div class="header__logo">
+        <a href="https://todo.net.pl" target="_blank" rel="noopener" class="header__logo-link">
+            <img src="https://todo.net.pl/wp-content/uploads/2025/01/logo-biale-rgb.svg" alt="TODO" class="header__logo-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+            <span class="header__logo-fallback" style="display:none;">
+                <span class="logo-todo">TODO</span>
+                <span class="logo-tagline">Creativity meets execution</span>
+            </span>
+        </a>
+    </div>
+    <div class="header__title">
+        <h1>Gadget Matcher</h1>
+        <p class="header__subtitle">Wyszukiwarka produktów Blue Collection</p>
+    </div>
+    <div class="header__badge">
+        <span class="badge badge--api">API</span>
+        <span class="badge badge--bc">Blue Collection</span>
+    </div>
+</div>
+</header>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- Sekcja wyszukiwania -->
+<section class="search-section">
+<div class="inner">
+    <div class="search-card">
+        <div class="search-card__header">
+            <div class="search-card__icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </div>
+            <h2 class="search-card__title">Wklej specyfikację gadżetu</h2>
+        </div>
+        <div class="search-card__body">
+            <textarea id="specInput" class="search-textarea" placeholder="Wklej tutaj pełną specyfikację gadżetu...
+
+Przykład:
+Nazwa gadżetu: Pendrive 16 GB
+Kolor: srebrny, czarny
+Wymiary: 41 x 12,2 x 4,5 mm
+Materiał: aluminium, metal
+Znakowanie: nadruk, 1 miejsce
+Opakowanie: pudełko tekturowe" rows="10"></textarea>
+            <div class="search-actions">
+                <button id="btnAnalyze" class="btn btn--primary" onclick="app.analyzeSpec()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    Szukaj dopasowań
+                </button>
+                <button class="btn btn--ghost" onclick="app.clearAll()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                    Wyczyść
+                </button>
+                <button class="btn btn--outline" onclick="app.loadExample()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>
+                    Przykład
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</section>
+
+<!-- Parametry -->
+<section id="paramsSection" class="params-section" style="display:none;">
+<div class="inner">
+    <div class="params-card">
+        <div class="params-card__header">
+            <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Wyodrębnione parametry</h3>
+            <button class="btn btn--sm btn--ghost" onclick="app.toggleParams()"><span id="paramsToggleText">Zwiń</span></button>
+        </div>
+        <div id="paramsGrid" class="params-grid"></div>
+    </div>
+</div>
+</section>
+
+<!-- Status -->
+<div id="statusBar" class="status-bar" style="display:none;">
+<div class="status-bar__inner"><div class="loader"></div><span id="statusText">Szukam...</span></div>
+</div>
+
+<!-- Wyniki -->
+<section id="resultsSection" class="results-section" style="display:none;">
+<div class="inner">
+    <div class="results-header">
+        <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg> Wyniki dopasowania</h3>
+        <div class="results-meta">
+            <span id="resultsCount" class="results-count"></span>
+            <select id="sortSelect" class="sort-select" onchange="app.sortResults()">
+                <option value="match-desc">Najlepsze dopasowanie</option>
+                <option value="match-asc">Najgorsze dopasowanie</option>
+                <option value="name-asc">Nazwa A-Z</option>
+            </select>
+        </div>
+    </div>
+    <div id="resultsGrid" class="results-grid"></div>
+</div>
+</section>
+
+<!-- Brak wyników -->
+<div id="noResults" class="no-results" style="display:none;">
+<div class="no-results__inner">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="m8 8 6 6"/><path d="m14 8-6 6"/></svg>
+    <h3>Brak wyników</h3>
+    <p>Nie znaleziono produktów spełniających minimalne kryteria dopasowania (30%).</p>
+    <button class="btn btn--outline" onclick="app.clearAll()">Spróbuj ponownie</button>
+</div>
+</div>
+
+<!-- Błąd -->
+<div id="errorBar" class="error-bar" style="display:none;">
+<div class="error-bar__inner">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+    <span id="errorText"></span>
+    <button class="error-bar__close" onclick="document.getElementById('errorBar').style.display='none'">×</button>
+</div>
+</div>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+<div class="footer__inner">
+    <div><span>TODO Gadget Matcher</span><span class="footer__sep">·</span><span>Blue Collection API</span></div>
+    <div><a href="https://todo.net.pl" target="_blank">todo.net.pl</a><span class="footer__sep">·</span><a href="https://bluecollection.gifts" target="_blank">bluecollection.gifts</a></div>
+</div>
+</footer>
+
+<!-- MODAL -->
+<div id="productModal" class="modal" style="display:none;" onclick="if(event.target===this)app.closeModal()">
+<div class="modal__content">
+    <button class="modal__close" onclick="app.closeModal()">×</button>
+    <div id="modalBody" class="modal__body"></div>
+</div>
+</div>
+
+<script>
+// ======================================================================
+// CONFIG
+// ======================================================================
+const CONFIG = {
+    gasWebAppUrl: 'https://script.google.com/macros/s/AKfycbwff3OVodhitPf8wd9MruyIWOabth78G1jnzuJZiyoZwPS4Gv7aG0Vuk2kPMNFsgbewEw/exec',
+    search: { minMatchPercent: 30, maxResults: 20, cacheExpiry: 24 },
+    paramWeights: { nazwa:1, pojemnosc:1, material:1, wymiary:1, kolor:1, znakowanie:1, opakowanie:1 },
+    colorMap: {
+        'srebrny':['silver','srebrny','szary','metaliczny'],'czarny':['black','czarny'],'biały':['white','biały','bialy'],
+        'czerwony':['red','czerwony','bordowy'],'niebieski':['blue','niebieski'],'granatowy':['navy','granatowy','dark blue'],
+        'zielony':['green','zielony'],'złoty':['gold','złoty'],'różowy':['pink','różowy'],'brązowy':['brown','brązowy'],
+        'pomarańczowy':['orange','pomarańczowy'],'fioletowy':['purple','fioletowy'],
+    },
+    materialMap: {
+        'aluminium':['aluminium','aluminum','alu'],'metal':['metal','metalowy','metalowe','metalowa'],
+        'stal':['stal','stainless steel','nierdzewna','stalowy'],'plastik':['plastik','tworzywo','abs','pc','plastikowy','plastikowe'],
+        'drewno':['drewno','drewniany','bambusowy','bamboo','wood'],'szkło':['szkło','szklany','glass','akryl','akrylowy'],
+        'silikon':['silikon','silikonowy'],'skóra':['skóra','skórzany','eco-skóra','eko-skóra','leather','pu'],
+        'tkanina':['tkanina','poliester','nylon','bawełna','rpet'],'papier':['papier','karton','tektura'],
+        'korek':['korek','korkowy','cork'],
+    },
+    packagingMap: {
+        'tekturowe':['tekturowe','tektura','kartonowe','karton','papierowe'],
+        'plastikowe':['plastikowe','foliowe','blistrowe'],
+        'metalowe':['metalowe','puszka','aluminiowe'],
+        'drewniane':['drewniane','drewno'],
+    },
+    exampleSpec: `Nazwa gadżetu: Pendrive 16 GB podświetlany\nSpecyfikacja: Prosta i elegancka pamięć USB z podświetlanym logo. Połączenie srebrnego aluminium z przezroczystym akrylem.\nKolor: srebrny\nKolor podświetlenia: biały\nWymiary: 60,5 x 18 x 10 mm [+/-2 mm]\nMateriał: aluminium, akryl\nZnakowanie: znakowanie na produkcie - 1 miejsce na szklanej powierzchni, opakowanie, nadruk: 1 miejsce, 1 kolor lub naklejka CMYK\nTechnika znakowania: nadruk\nOpakowanie Produktu: opakowanie jednostkowe, pudełko metalowe.`,
+};
+
+// ======================================================================
+// PARSER
+// ======================================================================
+const SpecParser = {
+    parse(text) {
+        if (!text || typeof text !== 'string') return null;
+        const n = text.replace(/\r\n/g,'\n').replace(/\t/g,' ').replace(/ {2,}/g,' ').trim();
+        return { nazwa:this._nazwa(n), pojemnosc:this._pojemnosc(n), material:this._material(n),
+                 wymiary:this._wymiary(n), kolor:this._kolor(n), znakowanie:this._znakowanie(n),
+                 opakowanie:this._opakowanie(n), rawText:text.trim() };
+    },
+    validate(p) {
+        if(!p) return {valid:false,missing:['wszystkie']};
+        // Liczymy ile parametrów wykryto (oprócz nazwy)
+        let found=0;
+        if(p.material&&p.material.length>0)found++;
+        if(p.kolor&&p.kolor.length>0)found++;
+        if(p.pojemnosc)found++;
+        if(p.wymiary)found++;
+        if(p.znakowanie)found++;
+        if(p.opakowanie&&p.opakowanie.length>0)found++;
+        // Wystarczy nazwa + 0 parametrów (szukamy po nazwie) lub min 1 parametr
+        return {valid:!!(p.nazwa||found>=1),missing:(!p.nazwa&&found===0)?['nazwa lub parametry']:[]};
+    },
+    // Wyciąga wartość po kluczu LUB bez klucza (sama linia zaczynająca się od słowa)
+    _getLine(t, keys) {
+        // Próbuj z dwukropkiem: "klucz: wartość" lub "klucz wartość"
+        for(const k of keys){
+            const re=new RegExp(`(?:^|\\n)\\s*${k}\\s*[:\\-–]?\\s*(.+?)(?:\\n|$)`,'im');
+            const m=t.match(re);
+            if(m && m[1].trim().length>0) return m[1].trim();
+        }
+        return null;
+    },
+    _nazwa(t) {
+        // Próbuj formalne klucze
+        const v=this._getLine(t,['nazwa\\s*gad[żz]etu','nazwa\\s*produktu','nazwa','produkt','szukam']);
+        if(v) return v;
+        // Pierwsza linia jako fallback
+        const fl=t.split('\n')[0].trim();
+        return (fl.length<120&&fl.length>2)?fl:null;
+    },
+    _pojemnosc(t) {
+        const v=this._getLine(t,['pojemno[śs][ćc]','rozmiar','capacity']);
+        if(v) return v;
+        // Szukaj wzorca liczbowego w całym tekście
+        const m=t.match(/(\d+)\s*(GB|MB|TB|mAh)\b/i);
+        if(m) return m[1]+' '+m[2].toUpperCase();
+        const m2=t.match(/(\d+)\s*(ml|l|cl)\b/i);
+        if(m2) return m2[1]+' '+m2[2];
+        // Format A4, A5, A6 itp.
+        const m3=t.match(/\b(A[3-6]|B[4-5])\b/i);
+        if(m3) return m3[1].toUpperCase();
+        return null;
+    },
+    _material(t) {
+        // Szukaj linii z kluczem
+        const v=this._getLine(t,['materia[łl]','materials?','tworzywo']);
+        // Szukaj materiałów w CAŁYM tekście (nie tylko po kluczu)
+        const searchIn = t;
+        const f=[];
+        for(const[k,syns] of Object.entries(CONFIG.materialMap)){
+            for(const s of syns){
+                if(new RegExp(`\\b${s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\b`,'i').test(searchIn)){
+                    if(!f.includes(k))f.push(k);break;
+                }
+            }
+        }
+        return f.length>0?f:null;
+    },
+    _wymiary(t) {
+        const dl=this._getLine(t,['wymiary','dimensions?','rozmiar(?:y)?']);
+        const dt=dl||t;
+        const r={raw:dl||null,values:[],tolerance:null,unit:'mm'};
+        const xm=dt.match(/(\d+[.,]?\d*)\s*(?:mm|cm)?\s*[x×X]\s*(\d+[.,]?\d*)\s*(?:mm|cm)?\s*(?:[x×X]\s*(\d+[.,]?\d*))?\s*(mm|cm)?/i);
+        if(xm){r.values.push(pn(xm[1]),pn(xm[2]));if(xm[3])r.values.push(pn(xm[3]));if(xm[4])r.unit=xm[4].toLowerCase();}
+        const tm=dt.match(/\[\s*[+\-±/]{1,3}\s*(\d+[.,]?\d*)\s*(mm|cm)?\s*\]/i);
+        if(tm)r.tolerance=pn(tm[1]);
+        return r.values.length>0?r:null;
+    },
+    _kolor(t) {
+        // Szukaj linii z kluczem
+        const v=this._getLine(t,['kolor(?:\\s+pod[śs]wietlenia)?','colour?s?','barwa']);
+        // Szukaj kolorów w CAŁYM tekście
+        const searchIn = t;
+        const f=[];
+        for(const[k,syns] of Object.entries(CONFIG.colorMap)){
+            for(const s of syns){
+                if(new RegExp(`\\b${s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\b`,'i').test(searchIn)){
+                    if(!f.includes(k))f.push(k);break;
+                }
+            }
+        }
+        return f.length>0?f:null;
+    },
+    _znakowanie(t) {
+        const r={technika:null,miejsca:null,kolory:null,raw:null,pozycja:null};
+        // Szukaj linii z kluczem — ALE też BEZ dwukropka (np. "ZNAKOWANIE na froncie")
+        const v=this._getLine(t,['znakowanie','technika\\s*(?:znakowania)?','marking','nadruk','dekoracja']);
+        if(v) r.raw=v;
+        // Pozycja znakowania (front, tył, bok, wieczko, klapa itp.)
+        const pozMatch=t.match(/(?:na\s+)?(froncie|przodzie|przedzie|tyle|tyłu|boku|bokach|wierzchu|wieczku|klapie|klapce|dnie|środku|obu\s+stronach|obu\s+bokach)/i);
+        if(pozMatch) r.pozycja=pozMatch[1].toLowerCase();
+        // Szukaj techniki w CAŁYM tekście
+        const techniki=['nadruk','grawer','tampodruk','sitodruk','sublimacja','haft','tłoczenie','doming','laser','uv','dtf','dtg','hot.?stamp','embossing','debossing'];
+        for(const tc of techniki){
+            if(new RegExp(`\\b${tc}\\b`,'i').test(t)){r.technika=tc.replace(/\.\?/,'');break;}
+        }
+        // Liczba miejsc
+        const pm=t.match(/(\d+)\s*miejsc[aeo]?\b/i);if(pm)r.miejsca=parseInt(pm[1]);
+        // Liczba kolorów
+        const cm=t.match(/(\d+)\s*kolor(?:y|ów|u|a|ow)?\b/i);if(cm)r.kolory=parseInt(cm[1]);
+        // Jeśli mamy pozycję ale nie technikę — też zwróć
+        return(r.technika||r.miejsca||r.kolory||r.raw||r.pozycja)?r:null;
+    },
+    _opakowanie(t) {
+        const v=this._getLine(t,['opakowanie(?:\\s*produktu)?','packaging','packing']);
+        const searchIn=v||t;
+        const f=[];
+        for(const[k,syns] of Object.entries(CONFIG.packagingMap)){
+            for(const s of syns){
+                if(new RegExp(`\\b${s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\b`,'i').test(searchIn)){
+                    if(!f.includes(k))f.push(k);break;
+                }
+            }
+        }
+        if(/pude[łl]ko/i.test(searchIn)&&!f.length){if(/metalow/i.test(searchIn))f.push('metalowe');else if(/plastikow/i.test(searchIn))f.push('plastikowe');else f.push('tekturowe');}
+        return f.length>0?f:null;
+    },
+};
+function pn(s){return s?parseFloat(s.replace(',','.')):0;}
+
+// ======================================================================
+// MATCHER
+// ======================================================================
+const Matcher = {
+    matchProducts(spec, products) {
+        if(!spec||!products||!products.length)return[];
+        const res=products.map(p=>{const md=this._calc(spec,p);return{...p,matchPercent:md.totalPercent,matchDetails:md.details,matchedParams:md.matchedParams,totalParams:md.totalParams};});
+        return res.filter(r=>r.matchPercent>=CONFIG.search.minMatchPercent).sort((a,b)=>b.matchPercent-a.matchPercent).slice(0,CONFIG.search.maxResults);
+    },
+    _calc(spec, p) {
+        const d={};let ts=0,tw=0,mp=0,tp=0;
+        const w=CONFIG.paramWeights;
+        if(spec.nazwa){tp++;const s=this._mName(spec.nazwa,p);d.nazwa={spec:spec.nazwa,product:p.name||p.nazwa||'',score:s,matched:s>.3};ts+=s*w.nazwa;tw+=w.nazwa;if(s>.3)mp++;}
+        if(spec.pojemnosc){tp++;const s=this._mCap(spec.pojemnosc,p);d.pojemnosc={spec:spec.pojemnosc,product:p.capacity||p.pojemnosc||'',score:s,matched:s>.3};ts+=s*w.pojemnosc;tw+=w.pojemnosc;if(s>.3)mp++;}
+        if(spec.material&&spec.material.length>0){tp++;const s=this._mMat(spec.material,p);d.material={spec:spec.material.join(', '),product:p.material||p.materials||'',score:s,matched:s>.3};ts+=s*w.material;tw+=w.material;if(s>.3)mp++;}
+        if(spec.wymiary&&spec.wymiary.values.length>0){tp++;const s=this._mDim(spec.wymiary,p);d.wymiary={spec:spec.wymiary.raw||spec.wymiary.values.join(' × ')+' '+spec.wymiary.unit,product:p.dimensions||p.wymiary||'',score:s,matched:s>.3};ts+=s*w.wymiary;tw+=w.wymiary;if(s>.3)mp++;}
+        if(spec.kolor&&spec.kolor.length>0){tp++;const s=this._mCol(spec.kolor,p);d.kolor={spec:spec.kolor.join(', '),product:p.colors||p.kolor||'',score:s,matched:s>.3};ts+=s*w.kolor;tw+=w.kolor;if(s>.3)mp++;}
+        if(spec.znakowanie){tp++;const s=this._mMark(spec.znakowanie,p);d.znakowanie={spec:spec.znakowanie.raw||`${spec.znakowanie.technika||''}, ${spec.znakowanie.miejsca||'?'} miejsc(a)`,product:p.marking||p.znakowanie||'',score:s,matched:s>.3};ts+=s*w.znakowanie;tw+=w.znakowanie;if(s>.3)mp++;}
+        if(spec.opakowanie&&spec.opakowanie.length>0){tp++;const s=this._mPack(spec.opakowanie,p);d.opakowanie={spec:spec.opakowanie.join(', '),product:p.packaging||p.opakowanie||'',score:s,matched:s>.3};ts+=s*w.opakowanie;tw+=w.opakowanie;if(s>.3)mp++;}
+        return{totalPercent:tw>0?Math.round((ts/tw)*100):0,details:d,matchedParams:mp,totalParams:tp};
+    },
+    _mName(sn,p){const pt=((p.name||'')+(p.description||'')+(p.category||'')).toLowerCase();const sl=sn.toLowerCase();if(pt.includes(sl))return 1;
+        // Synoniny produktów
+        const synonyms={'notatnik':['notes','notatnik','notebook','notepad','zeszyt','blok'],'pendrive':['pendrive','pamięć usb','flash','usb'],'powerbank':['power bank','powerbank','ładowarka'],'długopis':['długopis','pen','pióro'],'kubek':['kubek','mug','cup'],'termos':['termos','butelka termiczna','bidon'],'plecak':['plecak','backpack','torba'],'parasol':['parasol','umbrella'],'brelok':['brelok','breloczek','keychain'],'smycz':['smycz','lanyard'],'torba':['torba','bag','shopper'],'bidon':['bidon','butelka','bottle']};
+        let bonus=0;for(const[k,syns] of Object.entries(synonyms)){if(syns.some(s=>sl.includes(s))&&syns.some(s=>pt.includes(s)))bonus=0.5;}
+        const kw=sl.split(/[\s,;.]+/).filter(w=>w.length>2);if(!kw.length)return bonus;let m=0;for(const k of kw)if(pt.includes(k))m++;return Math.max(m/kw.length,bonus);},
+    _mCap(sc,p){const pt=((p.name||'')+' '+(p.description||'')+' '+(p.capacity||'')+' '+(p.pojemnosc||'')).toLowerCase();const sl=sc.toLowerCase();
+        // Format A4/A5/A3
+        const fmatch=sl.match(/^(a[3-6]|b[4-5])$/i);
+        if(fmatch) return pt.includes(fmatch[1].toLowerCase())?1:0;
+        // Numeryczny
+        const sm=sl.match(/(\d+)\s*(gb|mb|tb|ml|l|cl|mah)/i);if(!sm)return pt.includes(sl)?1:0;const sv=parseInt(sm[1]),su=sm[2].toLowerCase();const pm=pt.match(new RegExp(`(\\d+)\\s*${su}`,'i'));if(pm){const pv=parseInt(pm[1]);if(pv===sv)return 1;const r=Math.min(pv,sv)/Math.max(pv,sv);return r>.8?r:0;}return 0;},
+    _mMat(sm,p){const pt=((p.material||'')+' '+(p.materials||'')+' '+(p.description||'')+' '+(p.name||'')).toLowerCase();let m=0;for(const mat of sm){const syns=CONFIG.materialMap[mat]||[mat];for(const s of syns){if(pt.includes(s.toLowerCase())){m++;break;}}}return sm.length>0?m/sm.length:0;},
+    _mDim(sd,p){const pt=((p.dimensions||'')+' '+(p.wymiary||'')).toLowerCase();if(!pt.trim())return 0;const pd=this._parseDim(pt);if(!pd.length)return 0;const tol=sd.tolerance||4;const sv=sd.values.slice().sort((a,b)=>a-b);const pv=pd.sort((a,b)=>a-b);const mc=Math.min(sv.length,pv.length);let ts=0;for(let i=0;i<mc;i++){const d=Math.abs(sv[i]-pv[i]);if(d<=tol)ts+=1;else if(d<=tol*2)ts+=.5;else if(d<=tol*3)ts+=.2;}return mc>0?ts/mc:0;},
+    _mCol(sc,p){const pt=((p.colors||'')+' '+(p.kolor||'')+' '+(p.name||'')).toLowerCase();let m=0;for(const c of sc){const syns=CONFIG.colorMap[c]||[c];for(const s of syns){if(pt.includes(s.toLowerCase())){m++;break;}}}return sc.length>0?m/sc.length:0;},
+    _mMark(sm,p){const pt=((p.marking||'')+' '+(p.znakowanie||'')+' '+(p.description||'')).toLowerCase();if(!pt.trim())return .5;let s=0,c=0;
+        if(sm.technika){c++;if(pt.includes(sm.technika.toLowerCase()))s+=1;}
+        if(sm.miejsca){c++;if(new RegExp(`${sm.miejsca}\\s*miejsc`,'i').test(pt))s+=1;else if(pt.includes('miejsc'))s+=.3;}
+        if(sm.pozycja){c++;const pozSyns={'froncie':['front','przód','przod'],'przodzie':['front','przód'],'tyle':['tył','tyl','back'],'boku':['bok','side'],'wieczku':['wieczko','top','góra','gora']};
+        const syns=pozSyns[sm.pozycja]||[sm.pozycja];const found=syns.some(syn=>pt.includes(syn));if(found)s+=1;else s+=.3;}
+        if(c===0){c=1;s+=['nadruk','grawer','znakowanie','tampodruk','sitodruk','laser'].some(t=>pt.includes(t))?.7:0;}
+        return c>0?s/c:0;},
+    _mPack(sp,p){const pt=((p.packaging||'')+' '+(p.opakowanie||'')).toLowerCase();if(!pt.trim())return .5;let m=0;for(const pk of sp){const syns=CONFIG.packagingMap[pk]||[pk];for(const s of syns){if(pt.includes(s.toLowerCase())){m++;break;}}}return sp.length>0?m/sp.length:0;},
+    _parseDim(t){const v=[];const xm=t.match(/(\d+[.,]?\d*)\s*(?:mm|cm)?\s*[x×]\s*(\d+[.,]?\d*)\s*(?:mm|cm)?\s*(?:[x×]\s*(\d+[.,]?\d*))?\s*(?:mm|cm)?/i);if(xm){v.push(pn(xm[1]),pn(xm[2]));if(xm[3])v.push(pn(xm[3]));}else{const ns=t.match(/(\d+[.,]?\d*)\s*mm/gi);if(ns)for(const n of ns){const val=pn(n);if(val>0&&val<1000)v.push(val);}}return v;},
+    getMatchClass(p){return p>=80?'excellent':p>=60?'good':p>=40?'fair':'low';},
+    getMatchLabel(p){return p>=80?'Bardzo dobre':p>=60?'Dobre':p>=40?'Częściowe':'Niskie';},
+};
+
+// ======================================================================
+// API
+// ======================================================================
+const API = {
+    _cache:new Map(),_ts:new Map(),_source:'demo',
+    async searchProducts(spec){
+        const ck='ALL_PRODUCTS'; // Cache ALL products, filter client-side
+        if(this._cache.has(ck)&&(Date.now()-this._ts.get(ck))<CONFIG.search.cacheExpiry*3600000){
+            console.log('[API] cache hit, source:',this._source);
+            return this._cache.get(ck);
+        }
+        let products=[];
+        // GAS backend
+        if(CONFIG.gasWebAppUrl){
+            try{
+                products=await this._gas(spec);
+                if(products.length>0){
+                    this._source='API Blue Collection ('+products.length+' produktów)';
+                    this._cache.set(ck,products);this._ts.set(ck,Date.now());
+                    return products;
+                }
+            }catch(e){
+                console.warn('[API] GAS error:',e.message);
+                UI.showError('Nie udało się połączyć z backendem ('+e.message+'). Używam wbudowanej bazy demo.');
+                await new Promise(r=>setTimeout(r,1500));UI.hideError();
+            }
+        }
+        // Demo fallback
+        console.log('[API] using demo products');
+        this._source='Baza demo ('+this._demo().length+' produktów)';
+        products=this._demo();
+        this._cache.set(ck,products);this._ts.set(ck,Date.now());
+        return products;
+    },
+    getSource(){return this._source;},
+    async _gas(spec){
+        // GAS Web App wymaga redirect:follow i NIE wysyłamy custom headers (CORS)
+        const u=CONFIG.gasWebAppUrl+'?action=search&query='+encodeURIComponent(JSON.stringify(spec));
+        const r=await fetch(u,{method:'GET',redirect:'follow'});
+        const txt=await r.text();
+        let d;try{d=JSON.parse(txt);}catch(e){console.warn('[API] GAS nie zwrócił JSON:',txt.substring(0,200));throw new Error('Nieprawidłowa odpowiedź GAS');}
+        if(d.error)throw new Error(d.error);return d.products||[];
+    },
+    _demo(){return[
+        {id:'BC-44071',sku:'44071',name:'Pamięć USB VERONA 16 GB',description:'Elegancka pamięć USB z podświetlanym logo. Obudowa z aluminium i szkła akrylowego. Podświetlenie LED białe. USB 2.0.',capacity:'16 GB',pojemnosc:'16 GB',material:'aluminium, akryl, szkło akrylowe',dimensions:'60 x 18 x 10 mm',wymiary:'60 x 18 x 10 mm',colors:'srebrny',kolor:'srebrny',marking:'grawer laserowy - 1 miejsce na szklanej powierzchni, 30 x 8 mm',znakowanie:'grawer laserowy 1 miejsce, nadruk na opakowaniu 1 kolor',packaging:'pudełko metalowe',opakowanie:'pudełko metalowe jednostkowe',price:'28,50 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/44071.html',category:'Pamięci USB'},
+        {id:'BC-44072',sku:'44072',name:'Pamięć USB VERONA 16 GB czarna',description:'Elegancka pamięć USB z podświetlanym logo. Obudowa z aluminium i szkła akrylowego. Wersja czarna.',capacity:'16 GB',pojemnosc:'16 GB',material:'aluminium, akryl, szkło akrylowe',dimensions:'60 x 18 x 10 mm',wymiary:'60 x 18 x 10 mm',colors:'czarny',kolor:'czarny',marking:'grawer laserowy - 1 miejsce na szklanej powierzchni',znakowanie:'grawer laserowy 1 miejsce, nadruk na opakowaniu 1 kolor',packaging:'pudełko metalowe',opakowanie:'pudełko metalowe jednostkowe',price:'28,50 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/44072.html',category:'Pamięci USB'},
+        {id:'BC-44076',sku:'44076',name:'Pamięć USB TORINO 16 GB z podświetleniem',description:'Pendrive z podświetlanym logo LED. Obudowa aluminiowa z elementami ze szkła akrylowego. USB 2.0. 16 GB.',capacity:'16 GB',pojemnosc:'16 GB',material:'aluminium, akryl',dimensions:'62 x 17 x 9 mm',wymiary:'62 x 17 x 9 mm',colors:'srebrny',kolor:'srebrny',marking:'grawer laserowy na akrylu - 1 miejsce, podświetlenie logo',znakowanie:'grawer laserowy 1 miejsce na szklanej powierzchni, nadruk na opakowaniu 1 kolor',packaging:'pudełko metalowe',opakowanie:'pudełko metalowe jednostkowe',price:'32,00 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/44076.html',category:'Pamięci USB'},
+        {id:'BC-44073',sku:'44073',name:'Pamięć USB PALERMO 16 GB',description:'Nowoczesna pamięć USB w metalowej obudowie. Kompaktowa konstrukcja. USB 2.0, 16 GB.',capacity:'16 GB',pojemnosc:'16 GB',material:'metal, aluminium, stal',dimensions:'42 x 12 x 4 mm',wymiary:'42 x 12 x 4 mm',colors:'srebrny, czarny, granatowy, czerwony',kolor:'srebrny, czarny, granatowy, czerwony',marking:'nadruk - 1 miejsce, grawer laserowy',znakowanie:'nadruk 1 miejsce 1 kolor lub grawer laserowy, nadruk na opakowaniu',packaging:'pudełko tekturowe',opakowanie:'pudełko tekturowe jednostkowe',price:'18,90 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/44073.html',category:'Pamięci USB'},
+        {id:'BC-44077',sku:'44077',name:'Pamięć USB CATANIA 16 GB USB 3.0',description:'Szybki pendrive USB 3.0 o pojemności 16 GB. Metalowa obudowa z obrotową klapką. Prędkość odczytu 40 MB/s, zapisu 15 MB/s. W komplecie zawieszka.',capacity:'16 GB',pojemnosc:'16 GB',material:'metal, aluminium, stal',dimensions:'40 x 12 x 5 mm',wymiary:'40 x 12 x 5 mm',colors:'srebrny, czarny, granatowy, czerwony',kolor:'srebrny, czarny, granatowy, czerwony',marking:'nadruk - 1 miejsce, 1 kolor lub naklejka CMYK',znakowanie:'nadruk 1 miejsce 1 kolor lub naklejka CMYK, nadruk na opakowaniu',packaging:'pudełko tekturowe lub plastikowe',opakowanie:'pudełko tekturowe, pudełko plastikowe',price:'19,90 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/44077.html',category:'Pamięci USB'},
+        {id:'BC-44075',sku:'44075',name:'Pamięć USB NAPOLI 16 GB',description:'Smukły pendrive metalowy z zawieszką. USB 2.0. Pojemność 16 GB. W komplecie smycz.',capacity:'16 GB',pojemnosc:'16 GB',material:'metal, stal nierdzewna',dimensions:'39 x 12 x 5 mm',wymiary:'39 x 12 x 5 mm',colors:'srebrny, czarny',kolor:'srebrny, czarny',marking:'grawer laserowy - 1 miejsce, 20 x 8 mm',znakowanie:'grawer laserowy 1 miejsce, nadruk na opakowaniu',packaging:'pudełko tekturowe',opakowanie:'pudełko tekturowe jednostkowe',price:'16,50 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/44075.html',category:'Pamięci USB'},
+        {id:'BC-44074',sku:'44074',name:'Pamięć USB ROMA 32 GB',description:'Pendrive z obrotową obudową. USB 3.0. Pojemność 32 GB. Aluminiowa klapka.',capacity:'32 GB',pojemnosc:'32 GB',material:'aluminium, plastik',dimensions:'56 x 19 x 10 mm',wymiary:'56 x 19 x 10 mm',colors:'srebrny, czarny, niebieski, czerwony',kolor:'srebrny, czarny, niebieski, czerwony',marking:'nadruk - 2 miejsca, tampodruk',znakowanie:'nadruk 2 miejsca, tampodruk, naklejka CMYK',packaging:'pudełko plastikowe',opakowanie:'pudełko plastikowe jednostkowe',price:'22,00 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/44074.html',category:'Pamięci USB'},
+        {id:'BC-44080',sku:'44080',name:'Pamięć USB FIRENZE 8 GB',description:'Klasyczny pendrive z drewnianą obudową. USB 2.0. Pojemność 8 GB.',capacity:'8 GB',pojemnosc:'8 GB',material:'drewno, metal',dimensions:'58 x 24 x 10 mm',wymiary:'58 x 24 x 10 mm',colors:'brązowy, naturalny',kolor:'brązowy',marking:'grawer laserowy - 1 miejsce',znakowanie:'grawer laserowy 1 miejsce',packaging:'pudełko tekturowe ekologiczne',opakowanie:'pudełko tekturowe',price:'14,50 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/44080.html',category:'Pamięci USB'},
+        {id:'BC-44081',sku:'44081',name:'Pamięć USB ECO SIRACUSA 16 GB',description:'Ekologiczny pendrive z obudową korkową i metalową klapką. USB 2.0. 16 GB.',capacity:'16 GB',pojemnosc:'16 GB',material:'korek, metal',dimensions:'57 x 20 x 10 mm',wymiary:'57 x 20 x 10 mm',colors:'naturalny, brązowy',kolor:'brązowy, naturalny',marking:'grawer laserowy - 1 miejsce',znakowanie:'grawer laserowy 1 miejsce',packaging:'pudełko tekturowe ekologiczne',opakowanie:'pudełko tekturowe',price:'17,50 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/44081.html',category:'Pamięci USB'},
+        {id:'BC-44090',sku:'44090',name:'Pamięć USB MILANO 64 GB USB 3.0',description:'Szybki pendrive USB 3.0 o pojemności 64 GB. Aluminiowa obudowa.',capacity:'64 GB',pojemnosc:'64 GB',material:'aluminium',dimensions:'55 x 18 x 8 mm',wymiary:'55 x 18 x 8 mm',colors:'srebrny, czarny, granatowy',kolor:'srebrny, czarny, granatowy',marking:'grawer laserowy - 1 miejsce, nadruk - 1 miejsce',znakowanie:'grawer laserowy lub nadruk, 1 miejsce, 1 kolor',packaging:'pudełko plastikowe',opakowanie:'pudełko plastikowe',price:'35,00 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/44090.html',category:'Pamięci USB'},
+        {id:'BC-45010',sku:'45010',name:'Power bank COMO 10000 mAh',description:'Kompaktowy power bank o pojemności 10000 mAh. Aluminiowa obudowa. 2 porty USB.',capacity:'10000 mAh',pojemnosc:'10000 mAh',material:'aluminium',dimensions:'130 x 68 x 14 mm',wymiary:'130 x 68 x 14 mm',colors:'srebrny, czarny, czerwony, granatowy',kolor:'srebrny, czarny, czerwony, granatowy',marking:'grawer laserowy - 1 miejsce',znakowanie:'grawer laserowy 1 miejsce',packaging:'pudełko tekturowe',opakowanie:'pudełko tekturowe',price:'45,00 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/45010.html',category:'Power banki'},
+        {id:'BC-45020',sku:'45020',name:'Power bank VENICE 5000 mAh',description:'Ultracienki power bank 5000 mAh. Metalowa obudowa. Port USB-C. Ładowanie Qi.',capacity:'5000 mAh',pojemnosc:'5000 mAh',material:'metal, aluminium',dimensions:'100 x 63 x 9 mm',wymiary:'100 x 63 x 9 mm',colors:'srebrny, czarny, biały, złoty',kolor:'srebrny, czarny, biały, złoty',marking:'nadruk UV - 1 miejsce, grawer laserowy',znakowanie:'nadruk UV lub grawer laserowy 1 miejsce',packaging:'pudełko tekturowe',opakowanie:'pudełko tekturowe',price:'55,00 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/45020.html',category:'Power banki'},
+        {id:'BC-19010',sku:'19010',name:'Długopis SIENA metalowy',description:'Elegancki długopis metalowy z chromowanymi wykończeniami. Wkład wymienny.',material:'metal, chromowany',dimensions:'138 x 11 mm',wymiary:'138 x 11 mm',colors:'srebrny, czarny, granatowy, czerwony, biały',kolor:'srebrny, czarny, granatowy, czerwony, biały',marking:'grawer laserowy - 1 miejsce, tampodruk',znakowanie:'grawer laserowy lub tampodruk 1 miejsce 1 kolor',packaging:'etui tekturowe',opakowanie:'tekturowe',price:'8,50 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/19010.html',category:'Długopisy'},
+        {id:'BC-35010',sku:'35010',name:'Kubek termiczny GENOVA 350 ml',description:'Kubek termiczny ze stali nierdzewnej. 350 ml. Podwójna ścianka.',capacity:'350 ml',pojemnosc:'350 ml',material:'stal nierdzewna',dimensions:'80 x 80 x 180 mm',wymiary:'80 x 80 x 180 mm',colors:'srebrny, czarny, biały, czerwony, granatowy',kolor:'srebrny, czarny, biały, czerwony, granatowy',marking:'grawer laserowy - 1 miejsce',znakowanie:'grawer laserowy 1 miejsce, sitodruk 1 kolor',packaging:'pudełko tekturowe',opakowanie:'pudełko tekturowe',price:'32,00 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/35010.html',category:'Kubki termiczne'},
+        {id:'BC-35020',sku:'35020',name:'Butelka termiczna PARMA 500 ml',description:'Butelka termiczna ze stali nierdzewnej. 500 ml. Utrzymuje temperaturę do 12h.',capacity:'500 ml',pojemnosc:'500 ml',material:'stal nierdzewna',dimensions:'70 x 70 x 260 mm',wymiary:'70 x 70 x 260 mm',colors:'srebrny, czarny, biały, czerwony, granatowy, zielony',kolor:'srebrny, czarny, biały, czerwony, granatowy, zielony',marking:'grawer laserowy - 1 miejsce',znakowanie:'grawer laserowy 1 miejsce',packaging:'pudełko tekturowe',opakowanie:'pudełko tekturowe',price:'38,00 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/35020.html',category:'Termosy'},
+        {id:'BC-21010',sku:'21010',name:'Notes PADOVA A4',description:'Elegancki notes A4 z papierowymi kartkami w kratkę. Oprawa twarda, 80 kartek. Zamykany gumką. Znakowanie na froncie.',capacity:'A4',pojemnosc:'A4',material:'papier, karton, tektura',dimensions:'297 x 210 x 15 mm',wymiary:'297 x 210 x 15 mm',colors:'czarny, granatowy, czerwony, niebieski, zielony',kolor:'czarny, granatowy, czerwony, niebieski, zielony',marking:'nadruk UV - 1 miejsce na froncie, tłoczenie, sitodruk',znakowanie:'nadruk UV 1 miejsce na froncie, tłoczenie, sitodruk 1 kolor',packaging:'foliowe',opakowanie:'foliowe, polybag',price:'12,50 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/21010.html',category:'Notesy'},
+        {id:'BC-21011',sku:'21011',name:'Notes PADOVA A5',description:'Notes A5 z papierowymi kartkami w kratkę. Oprawa twarda, 80 kartek. Zamykany gumką. Znakowanie na froncie i tyle.',capacity:'A5',pojemnosc:'A5',material:'papier, karton',dimensions:'210 x 148 x 12 mm',wymiary:'210 x 148 x 12 mm',colors:'czarny, granatowy, czerwony, niebieski, zielony, pomarańczowy, biały',kolor:'czarny, granatowy, czerwony, niebieski, zielony, pomarańczowy, biały',marking:'nadruk UV - 1 miejsce na froncie, tłoczenie, sitodruk',znakowanie:'nadruk UV 1 miejsce na froncie, tłoczenie, sitodruk 1 kolor',packaging:'foliowe',opakowanie:'foliowe, polybag',price:'9,50 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/21011.html',category:'Notesy'},
+        {id:'BC-21020',sku:'21020',name:'Notes RAVENNA A4 z kieszonką',description:'Notes A4 z elastyczną kieszonką wewnątrz. 96 kartek w linię. Oprawa ekologiczna. Zamykany gumką.',capacity:'A4',pojemnosc:'A4',material:'papier, karton, tkanina',dimensions:'297 x 210 x 18 mm',wymiary:'297 x 210 x 18 mm',colors:'czarny, szary, granatowy, brązowy',kolor:'czarny, szary, granatowy, brązowy',marking:'tłoczenie - 1 miejsce na froncie, nadruk UV',znakowanie:'tłoczenie 1 miejsce na froncie, nadruk UV 1 kolor',packaging:'pudełko tekturowe',opakowanie:'pudełko tekturowe',price:'18,00 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/21020.html',category:'Notesy'},
+        {id:'BC-21030',sku:'21030',name:'Notes ECO FERRARA A5',description:'Ekologiczny notes A5 z recyklingowanego papieru. 80 kartek w linię. Oprawa korkowa.',capacity:'A5',pojemnosc:'A5',material:'papier, korek, karton',dimensions:'210 x 148 x 12 mm',wymiary:'210 x 148 x 12 mm',colors:'brązowy, naturalny',kolor:'brązowy, naturalny',marking:'grawer laserowy - 1 miejsce na froncie',znakowanie:'grawer laserowy 1 miejsce na froncie',packaging:'foliowe',opakowanie:'foliowe',price:'14,00 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/21030.html',category:'Notesy'},
+        {id:'BC-36010',sku:'36010',name:'Bidon RIMINI 750 ml',description:'Sportowy bidon 750 ml z ustnikiem. Tworzywo BPA-free. Lekki i wytrzymały.',capacity:'750 ml',pojemnosc:'750 ml',material:'plastik, tworzywo, BPA-free',dimensions:'72 x 72 x 250 mm',wymiary:'72 x 72 x 250 mm',colors:'czarny, biały, czerwony, niebieski, granatowy, zielony',kolor:'czarny, biały, czerwony, niebieski, granatowy, zielony',marking:'nadruk - 1 miejsce, sitodruk 1 kolor',znakowanie:'nadruk 1 miejsce, sitodruk 1 kolor',packaging:'foliowe',opakowanie:'foliowe',price:'8,90 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/36010.html',category:'Bidony'},
+        {id:'BC-50010',sku:'50010',name:'Plecak TRENTO na laptopa 15.6"',description:'Plecak na laptopa do 15.6 cala. Materiał RPET z recyklingu. Kieszeń na butelkę.',capacity:'15.6 cali',pojemnosc:'20 L',material:'tkanina, rpet, poliester',dimensions:'430 x 300 x 140 mm',wymiary:'430 x 300 x 140 mm',colors:'czarny, szary, granatowy',kolor:'czarny, szary, granatowy',marking:'sitodruk - 1 miejsce na froncie, nadruk',znakowanie:'sitodruk 1 miejsce na froncie, nadruk 1 kolor',packaging:'foliowe',opakowanie:'foliowe',price:'42,00 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/50010.html',category:'Plecaki'},
+        {id:'BC-55010',sku:'55010',name:'Parasol MODENA automatyczny',description:'Parasol automatyczny z wiatroszczelną konstrukcją. Średnica 105 cm. Pokrowiec w komplecie.',material:'poliester, metal, tworzywo',dimensions:'średnica 105 cm, złożony 30 cm',wymiary:'1050 x 300 mm',colors:'czarny, granatowy, czerwony, niebieski, zielony',kolor:'czarny, granatowy, czerwony, niebieski, zielony',marking:'sitodruk - 1 miejsce na panelu, nadruk sublimacyjny',znakowanie:'sitodruk 1 miejsce na panelu, sublimacja',packaging:'foliowe',opakowanie:'foliowe',price:'22,00 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/55010.html',category:'Parasole'},
+        {id:'BC-60010',sku:'60010',name:'Smycz TRIESTE z karabińczykiem',description:'Smycz na identyfikator z karabińczykiem i safety break. Szerokość 20 mm.',material:'poliester, tkanina, metal',dimensions:'900 x 20 mm',wymiary:'900 x 20 mm',colors:'czarny, granatowy, czerwony, biały, niebieski, zielony, pomarańczowy',kolor:'czarny, granatowy, czerwony, biały, niebieski, zielony, pomarańczowy',marking:'sublimacja full color - obie strony',znakowanie:'sublimacja full color obie strony, sitodruk',packaging:'foliowe',opakowanie:'foliowe',price:'2,80 zł',imageUrl:'',url:'https://oferta.bluecollection.gifts/60010.html',category:'Smycze'},
+    ];}
+};
+
+// ======================================================================
+// UI
+// ======================================================================
+const UI = {
+    renderParams(p){
+        const c=document.getElementById('paramsGrid'),s=document.getElementById('paramsSection');
+        if(!p){s.style.display='none';return;}
+        const items=[
+            {l:'Nazwa',v:p.nazwa},{l:'Pojemność',v:p.pojemnosc},
+            {l:'Materiał',v:p.material?p.material.join(', '):null},
+            {l:'Wymiary',v:p.wymiary?p.wymiary.raw||p.wymiary.values.join(' × ')+' '+p.wymiary.unit:null},
+            {l:'Tolerancja',v:p.wymiary&&p.wymiary.tolerance?'±'+p.wymiary.tolerance+' mm':null},
+            {l:'Kolor',v:p.kolor?p.kolor.join(', '):null},
+            {l:'Znakowanie',v:p.znakowanie?(p.znakowanie.technika||p.znakowanie.raw||''):null},
+            {l:'Pozycja',v:p.znakowanie&&p.znakowanie.pozycja?p.znakowanie.pozycja:null},
+            {l:'Miejsca',v:p.znakowanie&&p.znakowanie.miejsca?String(p.znakowanie.miejsca):null},
+            {l:'Opakowanie',v:p.opakowanie?p.opakowanie.join(', '):null},
+        ];
+        c.innerHTML=items.map(i=>`<div class="param-item"><div class="param-item__label">${i.l}</div><div class="param-item__value ${!i.v?'empty':''}">${i.v||'Nie wykryto'}</div></div>`).join('');
+        s.style.display='block';
+    },
+    renderResults(r){
+        const s=document.getElementById('resultsSection'),g=document.getElementById('resultsGrid'),cnt=document.getElementById('resultsCount'),nr=document.getElementById('noResults');
+        if(!r||!r.length){s.style.display='none';nr.style.display='block';return;}
+        nr.style.display='none';s.style.display='block';
+        cnt.textContent=r.length+' '+(r.length===1?'produkt':r.length<5?'produkty':'produktów')+' · '+API.getSource();
+        g.innerHTML=r.map((p,i)=>this._card(p,i)).join('');
+    },
+    _card(p,i){
+        const mc=Matcher.getMatchClass(p.matchPercent);
+        const tags=[];if(p.matchDetails){for(const[k,d] of Object.entries(p.matchDetails)){if(d.matched)tags.push(`<span class="tag tag--matched">${this._pl(k)}</span>`);}}
+        const bc=mc==='excellent'?'var(--mx)':mc==='good'?'var(--mg)':mc==='fair'?'var(--mf)':'var(--ml)';
+        const ph='<svg class="placeholder-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>';
+        const imgUrl = this._getImgUrl(p);
+        const imgHtml = imgUrl
+            ? `<img src="${imgUrl}" alt="${p.name||''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;align-items:center;justify-content:center;width:100%;height:100%">${ph}</div>`
+            : ph;
+        return `<div class="product-card" style="animation-delay:${i*60}ms" onclick="app.showProduct(${i})" role="button" tabindex="0">
+            <div class="product-card__match"><span class="match-badge match-badge--${mc}">${p.matchPercent}%</span></div>
+            <div class="product-card__image">${imgHtml}</div>
+            <div class="product-card__body">
+                <div class="product-card__sku">${p.sku||''}</div>
+                <div class="product-card__name">${p.name||''}</div>
+                <div class="product-card__tags">${tags.join('')}</div>
+                <div class="match-bar"><div class="match-bar__fill" style="width:${p.matchPercent}%;background:${bc}"></div></div>
+            </div>
+            <div class="product-card__footer">
+                <span class="product-card__price">${p.price||''}</span>
+                <span class="product-card__link">Szczegóły →</span>
+            </div>
+        </div>`;
+    },
+    _getImgUrl(p){
+        // 1. Jeśli produkt ma imageUrl — użyj go
+        if(p.imageUrl && p.imageUrl.length>5 && !p.imageUrl.endsWith('/')) return p.imageUrl;
+        // 2. Generuj URL ze SKU (format Magento Blue Collection)
+        const sku=String(p.sku||p.id||'').replace(/\D/g,'');
+        if(sku.length>=4){
+            // Format: https://oferta.bluecollection.gifts/media/catalog/product/cache/.../XXXXX.jpg
+            // Alternatywnie generujemy URL do strony produktu — obrazek stamtąd
+            return `https://oferta.bluecollection.gifts/media/catalog/product/${sku.charAt(0)}/${sku.charAt(1)}/${sku}.jpg`;
+        }
+        return null;
+    },
+    renderModal(p){
+        const b=document.getElementById('modalBody'),mc=Matcher.getMatchClass(p.matchPercent);
+        const ph='<svg class="placeholder-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>';
+        const imgUrl = this._getImgUrl(p);
+        const imgHtml = imgUrl
+            ? `<img src="${imgUrl}" alt="${p.name||''}" style="max-width:100%;max-height:100%;object-fit:contain;padding:12px" onerror="this.style.display='none'">`
+            : ph;
+        let comp='';
+        if(p.matchDetails){
+            const rows=Object.entries(p.matchDetails).map(([k,d])=>{
+                const ic=d.matched?'<span style="color:var(--mx)">✓</span>':'<span style="color:var(--ml)">✗</span>';
+                return `<div class="comparison-row"><div class="comparison-row__label">${this._pl(k)}</div><div class="comparison-row__spec">${d.spec||'—'}</div><div class="comparison-row__product">${d.product||'—'}</div><div class="comparison-row__status">${ic} ${Math.round(d.score*100)}%</div></div>`;
+            }).join('');
+            comp=`<div class="modal__match-details"><h4>Porównanie parametrów</h4><div><div class="comparison-row" style="font-weight:700;font-size:.7rem;color:var(--g500);border-bottom:2px solid var(--g300)"><div>Parametr</div><div>Specyfikacja</div><div>Produkt</div><div style="text-align:center">Wynik</div></div>${rows}</div></div>`;
+        }
+        const attrs=[{l:'Kategoria',v:p.category},{l:'Materiał',v:p.material||p.materials},{l:'Wymiary',v:p.dimensions||p.wymiary},{l:'Kolory',v:p.colors||p.kolor},{l:'Pojemność',v:p.capacity||p.pojemnosc},{l:'Znakowanie',v:p.marking||p.znakowanie},{l:'Opakowanie',v:p.packaging||p.opakowanie},{l:'Cena',v:p.price}].filter(a=>a.v);
+        const ah=attrs.map(a=>`<div class="attr-item"><div class="attr-item__label">${a.l}</div><div class="attr-item__value">${a.v}</div></div>`).join('');
+        b.innerHTML=`<div class="modal__product-header"><div class="modal__product-image">${imgHtml}</div><div class="modal__product-info"><h2>${p.name||''}</h2><div class="modal__product-sku">${p.sku||''}</div><span class="match-badge match-badge--${mc}" style="display:inline-flex">Dopasowanie: ${p.matchPercent}%</span><p style="margin-top:12px;font-size:.85rem;color:var(--g600);line-height:1.6">${p.description||''}</p>${p.url?`<a href="${p.url}" target="_blank" class="btn btn--outline btn--sm" style="margin-top:12px">Zobacz w katalogu →</a>`:''}</div></div>${comp}<div class="modal__product-attrs"><h4>Szczegóły produktu</h4><div class="attrs-grid">${ah}</div></div>`;
+        document.getElementById('productModal').style.display='flex';document.body.style.overflow='hidden';
+    },
+    showStatus(t){document.getElementById('statusBar').style.display='block';document.getElementById('statusText').textContent=t;},
+    hideStatus(){document.getElementById('statusBar').style.display='none';},
+    showError(t){document.getElementById('errorBar').style.display='block';document.getElementById('errorText').textContent=t;},
+    hideError(){document.getElementById('errorBar').style.display='none';},
+    _pl(k){return{nazwa:'Nazwa',pojemnosc:'Pojemność',material:'Materiał',wymiary:'Wymiary',kolor:'Kolor',znakowanie:'Znakowanie',opakowanie:'Opakowanie'}[k]||k;},
+};
+
+// ======================================================================
+// APP CONTROLLER
+// ======================================================================
+const app = {
+    state:{parsedSpec:null,results:[],searching:false},
+    async analyzeSpec(){
+        const text=document.getElementById('specInput').value.trim();
+        if(!text){UI.showError('Wklej specyfikację gadżetu w pole tekstowe.');return;}
+        if(this.state.searching)return;this.state.searching=true;
+        UI.hideError();document.getElementById('resultsSection').style.display='none';document.getElementById('noResults').style.display='none';
+        try{
+            UI.showStatus('Analizuję specyfikację gadżetu...');await new Promise(r=>setTimeout(r,300));
+            const parsed=SpecParser.parse(text);this.state.parsedSpec=parsed;UI.renderParams(parsed);
+            const v=SpecParser.validate(parsed);
+            if(!v.valid){UI.showError('Brak wystarczających parametrów. Brakuje: '+v.missing.join(', '));UI.hideStatus();this.state.searching=false;return;}
+            UI.showStatus('Szukam dopasowań w katalogu Blue Collection...');await new Promise(r=>setTimeout(r,400));
+            const products=await API.searchProducts(parsed);
+            UI.showStatus('Obliczam dopasowanie...');await new Promise(r=>setTimeout(r,300));
+            const results=Matcher.matchProducts(parsed,products);this.state.results=results;
+            UI.hideStatus();UI.renderResults(results);
+            if(results.length>0)document.getElementById('resultsSection').scrollIntoView({behavior:'smooth',block:'start'});
+        }catch(e){console.error(e);UI.hideStatus();UI.showError('Błąd: '+e.message);}
+        finally{this.state.searching=false;}
+    },
+    clearAll(){
+        document.getElementById('specInput').value='';
+        document.getElementById('paramsSection').style.display='none';
+        document.getElementById('resultsSection').style.display='none';
+        document.getElementById('noResults').style.display='none';
+        UI.hideError();UI.hideStatus();
+        this.state.parsedSpec=null;this.state.results=[];
+        document.getElementById('specInput').focus();
+    },
+    loadExample(){document.getElementById('specInput').value=CONFIG.exampleSpec;this.analyzeSpec();},
+    sortResults(){
+        const s=document.getElementById('sortSelect').value;let r=[...this.state.results];
+        if(s==='match-desc')r.sort((a,b)=>b.matchPercent-a.matchPercent);
+        else if(s==='match-asc')r.sort((a,b)=>a.matchPercent-b.matchPercent);
+        else if(s==='name-asc')r.sort((a,b)=>(a.name||'').localeCompare(b.name||'','pl'));
+        this.state.results=r;UI.renderResults(r);
+    },
+    showProduct(i){const p=this.state.results[i];if(p)UI.renderModal(p);},
+    closeModal(){document.getElementById('productModal').style.display='none';document.body.style.overflow='';},
+    toggleParams(){const g=document.getElementById('paramsGrid'),t=document.getElementById('paramsToggleText');g.classList.toggle('collapsed');t.textContent=g.classList.contains('collapsed')?'Rozwiń':'Zwiń';},
+};
+
+// Init
+document.addEventListener('DOMContentLoaded',()=>{
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')app.closeModal();});
+    document.getElementById('specInput').addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();app.analyzeSpec();}});
+});
+</script>
+</body>
+</html>
